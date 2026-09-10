@@ -60,7 +60,7 @@ export function PdfScreen({ data, protocolo, dbWarning = null, onVoltar }: Props
     const base = (import.meta.env.VITE_VALIDACAO_URL || '').replace(/\/$/, '')
     const validacaoUrl = base
       ? `${base}/atestado/${encodeURIComponent(protocolo)}`
-      : `http://localhost:5174/atestado/${encodeURIComponent(protocolo)}`
+      : `https://gabrieloliveiradev01.github.io/validacaoqrcode/atestado/${encodeURIComponent(protocolo)}`
     QRCode.toDataURL(validacaoUrl, { margin: 1, width: 160, errorCorrectionLevel: 'M' }).then(
       setQrUrl,
     )
