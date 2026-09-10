@@ -1,0 +1,295 @@
+.pdf {
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse at top, #d8ebe4 0%, transparent 55%),
+    linear-gradient(180deg, #e8f2ee 0%, #d0e0d9 100%);
+}
+
+.pdf__toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.85rem 1.25rem;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid #c5ddd6;
+  animation: slide-down 0.4s ease both;
+}
+
+.pdf__toolbar-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.pdf__btn {
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 600;
+  padding: 0.6rem 1.1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: transform 0.15s, filter 0.2s, background 0.2s;
+}
+
+.pdf__btn:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.pdf__btn--ghost {
+  border: 1.5px solid #b8d0c8;
+  background: #fff;
+  color: #0a3d34;
+}
+
+.pdf__btn--ghost:hover {
+  border-color: #0a7a5f;
+}
+
+.pdf__btn--primary {
+  border: none;
+  background: linear-gradient(135deg, #0a5c4a 0%, #0c6b7a 100%);
+  color: #fff;
+}
+
+.pdf__btn--primary:hover:not(:disabled) {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+.pdf__stage {
+  display: flex;
+  justify-content: center;
+  padding: 1.75rem 1rem 3rem;
+  animation: fade-up 0.55s ease 0.08s both;
+}
+
+.pdf__sheet {
+  width: 100%;
+  max-width: 210mm;
+  min-height: 277mm;
+  padding: 18mm 18mm 16mm;
+  background: #fff;
+  color: #12241f;
+  box-shadow: 0 12px 40px rgba(10, 61, 52, 0.18);
+  display: flex;
+  flex-direction: column;
+}
+
+.pdf__gov-bar {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.9rem;
+  align-items: center;
+  padding-bottom: 1rem;
+  border-bottom: 2.5px solid #0a5c4a;
+}
+
+.pdf__gov-text p {
+  margin: 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #3d5e54;
+}
+
+.pdf__gov-text strong {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.95rem;
+  color: #0a3d34;
+}
+
+.pdf__protocolo {
+  text-align: right;
+  font-size: 0.72rem;
+  color: #3d5e54;
+}
+
+.pdf__protocolo span {
+  display: block;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.pdf__protocolo strong {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.85rem;
+  color: #0a3d34;
+  font-family: ui-monospace, monospace;
+}
+
+.pdf__title {
+  margin: 1.6rem 0 0.35rem;
+  text-align: center;
+  font-family: 'Libre Baskerville', Georgia, serif;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #0a3d34;
+  letter-spacing: 0.02em;
+}
+
+.pdf__unidade {
+  margin: 0 0 1.5rem;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #3d5e54;
+}
+
+.pdf__body {
+  margin: 0 0 1.1rem;
+  font-size: 1.02rem;
+  line-height: 1.75;
+  text-align: justify;
+}
+
+.pdf__cid,
+.pdf__obs {
+  margin: 0 0 1rem;
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+.pdf__cid em {
+  color: #3d5e54;
+  font-style: italic;
+}
+
+.pdf__local {
+  margin: 1.75rem 0 2.5rem;
+  text-align: right;
+  font-size: 1rem;
+}
+
+.pdf__signature {
+  margin-top: auto;
+  padding-top: 2rem;
+  text-align: center;
+}
+
+.pdf__sign-line {
+  width: 220px;
+  height: 1px;
+  margin: 0 auto 0.65rem;
+  background: #12241f;
+}
+
+.pdf__sign-name {
+  margin: 0 0 0.25rem;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.pdf__sign-meta {
+  margin: 0;
+  font-size: 0.88rem;
+  color: #3d5e54;
+}
+
+.pdf__footer {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-top: 2.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #c5ddd6;
+}
+
+.pdf__footer p {
+  margin: 0;
+  max-width: 75%;
+  font-size: 0.68rem;
+  line-height: 1.45;
+  color: #3d5e54;
+}
+
+.pdf__qr {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.pdf__qr-box {
+  width: 56px;
+  height: 56px;
+  background:
+    repeating-linear-gradient(0deg, #0a3d34 0 4px, #fff 4px 8px),
+    repeating-linear-gradient(90deg, #0a3d34 0 4px, #fff 4px 8px);
+  background-blend-mode: multiply;
+  border: 2px solid #0a3d34;
+}
+
+.pdf__qr span {
+  font-size: 0.58rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #3d5e54;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  .pdf {
+    background: #fff;
+  }
+
+  .pdf__stage {
+    padding: 0;
+  }
+
+  .pdf__sheet {
+    box-shadow: none;
+    max-width: none;
+    min-height: auto;
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .pdf__sheet {
+    padding: 1.25rem;
+    min-height: auto;
+  }
+
+  .pdf__gov-bar {
+    grid-template-columns: auto 1fr;
+  }
+
+  .pdf__protocolo {
+    grid-column: 1 / -1;
+    text-align: left;
+  }
+}

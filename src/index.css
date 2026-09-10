@@ -1,0 +1,48 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+:root {
+  --gov-ink: #0a3d34;
+  --gov-accent: #0a5c4a;
+  --gov-paper: #f3f7f5;
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color: var(--gov-ink);
+  background-color: var(--gov-paper);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100%;
+}
+
+body {
+  background:
+    linear-gradient(180deg, #eef5f2 0%, #dfece7 40%, #d4e4de 100%);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #0a7a5f;
+  outline-offset: 2px;
+}
