@@ -1,6 +1,8 @@
 import { useState } from 'react'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { DadosScreen } from './components/DadosScreen'
 import { PdfScreen } from './components/PdfScreen'
+import { ValidacaoScreen } from './components/ValidacaoScreen'
 import { emptyAtestado, type AtestadoData } from './types'
 import { salvarAtestado } from './services/atestados'
 import { isSupabaseConfigured } from './lib/supabase'
@@ -8,7 +10,7 @@ import './App.css'
 
 type Screen = 'dados' | 'pdf'
 
-export default function App() {
+function EmissaoApp() {
   const [screen, setScreen] = useState<Screen>('dados')
   const [data, setData] = useState<AtestadoData>(emptyAtestado)
   const [protocolo, setProtocolo] = useState('')
@@ -58,5 +60,17 @@ export default function App() {
       saveError={saveError}
       dbReady={isSupabaseConfigured}
     />
+  )
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<EmissaoApp />} />
+        <Route path="/atestado/:protocolo" element={<ValidacaoScreen />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
   )
 }

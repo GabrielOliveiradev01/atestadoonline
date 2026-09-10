@@ -60,7 +60,7 @@ export function PdfScreen({ data, protocolo, dbWarning = null, onVoltar }: Props
     const base = (import.meta.env.VITE_VALIDACAO_URL || '').replace(/\/$/, '')
     const validacaoUrl = base
       ? `${base}/atestado/${encodeURIComponent(protocolo)}`
-      : `https://gabrieloliveiradev01.github.io/validacaoqrcode/atestado/${encodeURIComponent(protocolo)}`
+      : `https://amasaude.org/atestado/${encodeURIComponent(protocolo)}`
     QRCode.toDataURL(validacaoUrl, { margin: 1, width: 160, errorCorrectionLevel: 'M' }).then(
       setQrUrl,
     )
@@ -197,24 +197,16 @@ export function PdfScreen({ data, protocolo, dbWarning = null, onVoltar }: Props
       <div className="pdf__offscreen" aria-hidden="true">
         <article className="sheet" ref={sheetRef} id="atestado-sheet">
           <header className="sheet__header">
-            <img
-              className="sheet__logo-img sheet__logo-img--pref"
-              src="/logos/prefeitura-saude.png"
-              alt="Cidade de São Paulo — Saúde"
-            />
-
-            <div className="sheet__header-center">
-              <p>Prefeitura da Cidade de São Paulo</p>
-              <p>Secretaria Municipal da Saúde</p>
-              <p className="sheet__unidade">{data.unidadeNome}</p>
-              <p className="sheet__unidade-meta">
-                CEP: {data.unidadeCep}
-                {data.unidadeTelefone ? ` - Telefone: ${data.unidadeTelefone}` : ''}
-              </p>
-              <p className="sheet__unidade-meta">{data.unidadeEndereco}</p>
-            </div>
-
-            <div className="sheet__logos-right">
+            <div className="sheet__header-logos">
+              <img
+                className="sheet__logo-img sheet__logo-img--pref"
+                src="/logos/prefeitura-saude.png"
+                alt="Cidade de São Paulo — Saúde"
+              />
+              <div className="sheet__header-titles">
+                <p>Prefeitura da Cidade de São Paulo</p>
+                <p>Secretaria Municipal da Saúde</p>
+              </div>
               <img
                 className="sheet__logo-img sheet__logo-img--parceiro"
                 src="/logos/santa-marcelina.png"
@@ -225,6 +217,14 @@ export function PdfScreen({ data, protocolo, dbWarning = null, onVoltar }: Props
                 src="/logos/sus.png"
                 alt="SUS"
               />
+            </div>
+            <div className="sheet__unidade-block">
+              <p className="sheet__unidade">{data.unidadeNome}</p>
+              <p className="sheet__unidade-meta">
+                CEP: {data.unidadeCep}
+                {data.unidadeTelefone ? ` - Telefone: ${data.unidadeTelefone}` : ''}
+              </p>
+              <p className="sheet__unidade-meta">{data.unidadeEndereco}</p>
             </div>
           </header>
 
