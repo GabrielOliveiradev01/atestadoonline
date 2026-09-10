@@ -1,57 +1,155 @@
 import { useEffect, useRef, useState } from 'react'
 import { jsPDF } from 'jspdf'
 import html2canvas from 'html2canvas'
+import QRCode from 'qrcode'
 import type { AtestadoData } from '../types'
-import { diasPorExtenso, formatDateBr, generateProtocolo } from '../utils/format'
+import {
+  diasPorExtenso,
+  formatDateParts,
+  formatHoraCurta,
+  padDias,
+} from '../utils/format'
 import './PdfScreen.css'
 
 type Props = {
   data: AtestadoData
+  protocolo: string
+  dbWarning?: string | null
   onVoltar: () => void
 }
 
-export function PdfScreen({ data, onVoltar }: Props) {
+function Blank({ value, min = 8 }: { value?: string; min?: number }) {
+  const text = (value || '').trim()
+  return (
+    <span className={`sheet__fill ${text ? '' : 'is-empty'}`}>
+      {text || '_'.repeat(Math.max(min, 4))}
+    </span>
+  )
+}
+
+function Radio({ checked }: { checked: boolean }) {
+  return (
+    <span className={`sheet__radio ${checked ? 'is-on' : ''}`} aria-hidden="true">
+      {checked ? '●' : ''}
+    </span>
+  )
+}
+
+export function PdfScreen({ data, protocolo, dbWarning = null, onVoltar }: Props) {
   const sheetRef = useRef<HTMLDivElement>(null)
-  const [protocolo] = useState(() => generateProtocolo())
-  const [busy, setBusy] = useState(false)
+  const iframeRef = useRef<HTMLIFrameElement>(null)
+  const pdfUrlRef = useRef<string | null>(null)
+  const [qrUrl, setQrUrl] = useState('')
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   const dias = Number(data.diasAfastamento) || 1
-  const conselho =
-    data.tipoProfissional === 'medico' ? 'CRM' : 'CRM'
-  const tipoLabel =
-    data.tipoProfissional === 'medico' ? 'Médico(a)' : 'Médico(a) Radiologista'
+  const diasStr = padDias(dias)
+  const diasExt = diasPorExtenso(dias)
+  const emit = formatDateParts(data.dataEmissao)
+  const ini = formatDateParts(data.dataAtendimentoInicio)
+  const fim = formatDateParts(data.dataAtendimentoFim)
+  const intern = formatDateParts(data.dataInternacao)
+  const horaAssinatura = data.horaAtendimentoFim || '--:--'
+  const tituloProf =
+    data.tipoProfissional === 'radiologista' ? 'Médico Radiologista' : 'Médico'
 
   useEffect(() => {
     window.scrollTo(0, 0)
+    const base = (import.meta.env.VITE_VALIDACAO_URL || '').replace(/\/$/, '')
+    const validacaoUrl = base
+      ? `${base}/atestado/${encodeURIComponent(protocolo)}`
+      : `http://localhost:5174/atestado/${encodeURIComponent(protocolo)}`
+    QRCode.toDataURL(validacaoUrl, { margin: 1, width: 160, errorCorrectionLevel: 'M' }).then(
+      setQrUrl,
+    )
+  }, [protocolo])
+
+  useEffect(() => {
+    if (!qrUrl) return
+    let cancelled = false
+
+    const preload = (src: string) =>
+      new Promise<void>((resolve) => {
+        const img = new Image()
+        img.onload = () => resolve()
+        img.onerror = () => resolve()
+        img.src = src
+      })
+
+    const run = async () => {
+      setLoading(true)
+      setError(null)
+      try {
+        await Promise.all([
+          preload('/logos/prefeitura-saude.png'),
+          preload('/logos/santa-marcelina.png'),
+          preload('/logos/sus.png'),
+          preload(qrUrl),
+        ])
+        await new Promise((r) => setTimeout(r, 80))
+        if (!sheetRef.current || cancelled) return
+
+        const canvas = await html2canvas(sheetRef.current, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: '#ffffff',
+          logging: false,
+        })
+        const img = canvas.toDataURL('image/png')
+        const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+        const pageW = pdf.internal.pageSize.getWidth()
+        const pageH = pdf.internal.pageSize.getHeight()
+        const ratio = Math.min(pageW / canvas.width, pageH / canvas.height)
+        const w = canvas.width * ratio
+        const h = canvas.height * ratio
+        const x = (pageW - w) / 2
+        pdf.addImage(img, 'PNG', x, 6, w, Math.min(h, pageH - 12))
+
+        const blob = pdf.output('blob')
+        const url = URL.createObjectURL(blob)
+        if (cancelled) {
+          URL.revokeObjectURL(url)
+          return
+        }
+        if (pdfUrlRef.current) URL.revokeObjectURL(pdfUrlRef.current)
+        pdfUrlRef.current = url
+        setPdfUrl(url)
+      } catch (e) {
+        if (!cancelled) {
+          setError(e instanceof Error ? e.message : 'Falha ao gerar o PDF')
+        }
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+
+    void run()
+    return () => {
+      cancelled = true
+    }
+  }, [qrUrl, data, protocolo])
+
+  useEffect(() => {
+    return () => {
+      if (pdfUrlRef.current) URL.revokeObjectURL(pdfUrlRef.current)
+    }
   }, [])
 
-  const downloadPdf = async () => {
-    if (!sheetRef.current) return
-    setBusy(true)
-    try {
-      const canvas = await html2canvas(sheetRef.current, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#ffffff',
-      })
-      const img = canvas.toDataURL('image/png')
-      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
-      const pageW = pdf.internal.pageSize.getWidth()
-      const pageH = pdf.internal.pageSize.getHeight()
-      const ratio = Math.min(pageW / canvas.width, pageH / canvas.height)
-      const w = canvas.width * ratio
-      const h = canvas.height * ratio
-      const x = (pageW - w) / 2
-      const y = 8
-      pdf.addImage(img, 'PNG', x, y, w, Math.min(h, pageH - 16))
-      pdf.save(`atestado-${protocolo}.pdf`)
-    } finally {
-      setBusy(false)
-    }
+  const downloadPdf = () => {
+    if (!pdfUrl) return
+    const a = document.createElement('a')
+    a.href = pdfUrl
+    a.download = `atestado-${protocolo}.pdf`
+    a.click()
   }
 
   const printPdf = () => {
-    window.print()
+    const frame = iframeRef.current
+    if (!frame?.contentWindow) return
+    frame.contentWindow.focus()
+    frame.contentWindow.print()
   }
 
   return (
@@ -61,110 +159,187 @@ export function PdfScreen({ data, onVoltar }: Props) {
           ← Voltar aos dados
         </button>
         <div className="pdf__toolbar-actions">
-          <button type="button" className="pdf__btn pdf__btn--ghost" onClick={printPdf}>
+          <button
+            type="button"
+            className="pdf__btn pdf__btn--ghost"
+            onClick={printPdf}
+            disabled={!pdfUrl}
+          >
             Imprimir
           </button>
           <button
             type="button"
             className="pdf__btn pdf__btn--primary"
             onClick={downloadPdf}
-            disabled={busy}
+            disabled={!pdfUrl}
           >
-            {busy ? 'Gerando…' : 'Baixar PDF'}
+            Baixar PDF
           </button>
         </div>
       </header>
 
-      <div className="pdf__stage">
-        <article className="pdf__sheet" ref={sheetRef} id="atestado-sheet">
-          <div className="pdf__gov-bar">
-            <div className="pdf__brasao" aria-hidden="true">
-              <svg viewBox="0 0 64 64" width="48" height="48">
-                <circle cx="32" cy="32" r="30" fill="#0a5c4a" />
-                <circle cx="32" cy="32" r="24" fill="none" stroke="#e8c547" strokeWidth="2" />
-                <path
-                  d="M32 14 L38 28 H52 L40 36 L45 50 L32 41 L19 50 L24 36 L12 28 H26 Z"
-                  fill="#e8c547"
+      {dbWarning && <p className="pdf__warn no-print">{dbWarning}</p>}
+
+      <div className="pdf__viewer-wrap no-print">
+        {loading && <p className="pdf__status">Gerando visualização do PDF…</p>}
+        {error && <p className="pdf__status pdf__status--err">{error}</p>}
+        {pdfUrl && (
+          <iframe
+            ref={iframeRef}
+            className="pdf__viewer"
+            title={`Atestado ${protocolo}`}
+            src={pdfUrl}
+          />
+        )}
+      </div>
+
+      {/* Folha oculta só para montar o PDF */}
+      <div className="pdf__offscreen" aria-hidden="true">
+        <article className="sheet" ref={sheetRef} id="atestado-sheet">
+          <header className="sheet__header">
+            <img
+              className="sheet__logo-img sheet__logo-img--pref"
+              src="/logos/prefeitura-saude.png"
+              alt="Cidade de São Paulo — Saúde"
+            />
+
+            <div className="sheet__header-center">
+              <p>Prefeitura da Cidade de São Paulo</p>
+              <p>Secretaria Municipal da Saúde</p>
+              <p className="sheet__unidade">{data.unidadeNome}</p>
+              <p className="sheet__unidade-meta">
+                CEP: {data.unidadeCep}
+                {data.unidadeTelefone ? ` - Telefone: ${data.unidadeTelefone}` : ''}
+              </p>
+              <p className="sheet__unidade-meta">{data.unidadeEndereco}</p>
+            </div>
+
+            <div className="sheet__logos-right">
+              <img
+                className="sheet__logo-img sheet__logo-img--parceiro"
+                src="/logos/santa-marcelina.png"
+                alt="Santa Marcelina Saúde"
+              />
+              <img
+                className="sheet__logo-img sheet__logo-img--sus"
+                src="/logos/sus.png"
+                alt="SUS"
+              />
+            </div>
+          </header>
+
+          <h1 className="sheet__title">ATESTADO MÉDICO</h1>
+
+          <p className="sheet__p">
+            Atesto que o(a) paciente: <Blank value={data.pacienteNome} min={42} />
+          </p>
+
+          <p className="sheet__p">
+            portador(a) de <Blank value={data.pacienteDocumento} min={16} />, necessita de{' '}
+            <Blank value={diasStr} min={3} /> ( <Blank value={diasExt} min={6} /> ) dias de
+            afastamento do trabalho a partir desta data por motivo de doença.
+          </p>
+
+          <p className="sheet__p">
+            Esteve neste serviço de saúde dia{' '}
+            <Blank value={ini.d} min={2} /> / <Blank value={ini.m} min={2} /> /{' '}
+            <Blank value={ini.y} min={4} /> das <Blank value={data.horaAtendimentoInicio} min={5} />{' '}
+            às <Blank value={data.horaAtendimentoFim} min={5} /> hs até o dia{' '}
+            <Blank value={fim.d} min={2} /> / <Blank value={fim.m} min={2} /> /{' '}
+            <Blank value={fim.y} min={4} /> das <Blank value={data.horaAtendimentoInicio} min={5} />{' '}
+            às <Blank value={data.horaAtendimentoFim} min={5} /> hs.
+          </p>
+
+          <ul className="sheet__options">
+            <li>
+              <Radio checked={data.tipoRecomendacao === 'sem_afastamento'} />
+              <span>Para atendimento sem afastamento</span>
+            </li>
+            <li>
+              <Radio checked={data.tipoRecomendacao === 'repouso_hoje'} />
+              <span>Para atendimento, devendo permanecer em repouso hoje</span>
+            </li>
+            <li>
+              <Radio checked={data.tipoRecomendacao === 'afastado_dias'} />
+              <span>
+                Para atendimento, devendo permanecer afastado por{' '}
+                <Blank value={data.tipoRecomendacao === 'afastado_dias' ? diasStr : ''} min={3} />{' '}
+                dias a partir desta data.
+              </span>
+            </li>
+            <li>
+              <Radio checked={data.tipoRecomendacao === 'acompanhando'} />
+              <span>
+                Acompanhando o paciente{' '}
+                <Blank
+                  value={data.tipoRecomendacao === 'acompanhando' ? data.acompanhanteNome : ''}
+                  min={28}
                 />
-              </svg>
+              </span>
+            </li>
+            <li>
+              <Radio checked={data.tipoRecomendacao === 'internacao'} />
+              <span>
+                Em internação hospitalar desde o dia{' '}
+                <Blank value={data.tipoRecomendacao === 'internacao' ? intern.d : ''} min={2} /> /{' '}
+                <Blank value={data.tipoRecomendacao === 'internacao' ? intern.m : ''} min={2} /> /{' '}
+                <Blank value={data.tipoRecomendacao === 'internacao' ? intern.y : ''} min={4} />.
+              </span>
+            </li>
+          </ul>
+
+          <p className="sheet__p sheet__cid">
+            (C.I.D) <Blank value={data.autorizaCid ? data.cid : ''} min={8} /> ou diagnóstico:{' '}
+            <Blank value={data.autorizaCid ? data.diagnostico : ''} min={28} />
+          </p>
+
+          <p className="sheet__local">
+            {data.localEmissao || 'São Paulo'}, <Blank value={emit.d} min={2} /> /{' '}
+            <Blank value={emit.m} min={2} /> / <Blank value={emit.y} min={4} />
+          </p>
+
+          <div className="sheet__assinatura-block">
+            <div className="sheet__qr-col">
+              {qrUrl ? (
+                <img src={qrUrl} alt="" className="sheet__qr" />
+              ) : (
+                <div className="sheet__qr sheet__qr--placeholder" />
+              )}
             </div>
-            <div className="pdf__gov-text">
-              <p>República Federativa do Brasil</p>
-              <p>Sistema de Emissão de Atestado Médico</p>
-              <strong>Atestado Online — Documento Oficial</strong>
-            </div>
-            <div className="pdf__protocolo">
-              <span>Protocolo</span>
-              <strong>{protocolo}</strong>
+            <div className="sheet__sign-col">
+              <div className="sheet__carimbo">
+                <strong>
+                  Dr(a). {data.profissionalNome || '—'}
+                </strong>
+                <span>
+                  {tituloProf} — CRM/{data.conselhoUf} {data.conselhoNumero || '—'}
+                </span>
+              </div>
+              <p className="sheet__digital">
+                Documento assinado digitalmente nos termos da lei 11.419/2006{' '}
+                <strong>{data.profissionalNome || '—'}</strong> em{' '}
+                {formatHoraCurta(data.dataEmissao, horaAssinatura)}
+              </p>
+              <p className="sheet__digital-id">
+                {data.profissionalNome || '—'} / {data.conselhoNumero || '—'}
+              </p>
+              <div className="sheet__sign-line" />
+              <p className="sheet__sign-label">
+                Assinatura e carimbo do Médico ou Odontólogo / (CRM - CRO)
+              </p>
             </div>
           </div>
 
-          <h1 className="pdf__title">Atestado Médico</h1>
-
-          {data.unidadeSaude && (
-            <p className="pdf__unidade">{data.unidadeSaude}</p>
-          )}
-
-          <p className="pdf__body">
-            Atesto, para os devidos fins, que o(a) paciente{' '}
-            <strong>{data.pacienteNome || '—'}</strong>, portador(a) do CPF{' '}
-            <strong>{data.pacienteCpf || '—'}</strong>
-            {data.pacienteRg ? (
-              <>
-                {' '}e RG <strong>{data.pacienteRg}</strong>
-              </>
-            ) : null}
-            {data.pacienteNascimento ? (
-              <>
-                , nascido(a) em{' '}
-                <strong>{formatDateBr(data.pacienteNascimento)}</strong>
-              </>
-            ) : null}
-            , esteve sob meus cuidados profissionais e necessita de afastamento
-            de suas atividades por{' '}
-            <strong>
-              {dias} ({diasPorExtenso(dias)}) {dias === 1 ? 'dia' : 'dias'}
-            </strong>
-            , a partir de <strong>{formatDateBr(data.dataInicio)}</strong>.
-          </p>
-
-          {data.incluirCid && data.cid && (
-            <p className="pdf__cid">
-              Código Internacional de Doenças (CID-10): <strong>{data.cid}</strong>
-              <em> — informado com autorização do paciente.</em>
-            </p>
-          )}
-
-          {data.observacoes && (
-            <p className="pdf__obs">
-              <strong>Observações:</strong> {data.observacoes}
-            </p>
-          )}
-
-          <p className="pdf__local">
-            {data.localEmissao || '—'}, {formatDateBr(data.dataEmissao)}.
-          </p>
-
-          <div className="pdf__signature">
-            <div className="pdf__sign-line" />
-            <p className="pdf__sign-name">{data.profissionalNome || '—'}</p>
-            <p className="pdf__sign-meta">
-              {tipoLabel} — {data.especialidade || '—'}
-            </p>
-            <p className="pdf__sign-meta">
-              {conselho}/{data.conselhoUf} {data.conselhoNumero || '—'}
-            </p>
-          </div>
-
-          <footer className="pdf__footer">
-            <p>
-              Documento emitido eletronicamente. Validade conforme Resolução CFM
-              nº 2.299/2021 e normas vigentes. A autenticidade pode ser conferida
-              pelo protocolo <strong>{protocolo}</strong>.
-            </p>
-            <div className="pdf__qr" aria-hidden="true">
-              <div className="pdf__qr-box" />
-              <span>Validação GOV</span>
+          <footer className="sheet__footer">
+            <div className="sheet__footer-left">
+              <span className={`sheet__check ${data.autorizaCid ? 'is-on' : ''}`}>
+                {data.autorizaCid ? '☑' : '☐'}
+              </span>
+              <span>Autorizo divulgação do C.I.D. ou diagnóstico</span>
+            </div>
+            <div className="sheet__footer-right">
+              <div className="sheet__sign-line sheet__sign-line--paciente" />
+              <p className="sheet__sign-label">Assinatura do paciente</p>
             </div>
           </footer>
         </article>

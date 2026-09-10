@@ -39,7 +39,7 @@
 
 .dados__brand {
   margin: 0 0 0.85rem;
-  font-family: 'Libre Baskerville', Georgia, serif;
+  font-family: 'Poppins', system-ui, sans-serif;
   font-size: clamp(2.4rem, 6vw, 3.4rem);
   font-weight: 700;
   line-height: 1.15;
@@ -52,6 +52,42 @@
   font-size: 1.05rem;
   line-height: 1.55;
   opacity: 0.92;
+}
+
+.dados__db {
+  margin: 1rem 0 0;
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 0.35rem 0.7rem;
+  border-radius: 4px;
+}
+
+.dados__db.is-ok {
+  background: rgba(255, 255, 255, 0.18);
+  color: #d8ffe8;
+}
+
+.dados__db.is-warn {
+  background: rgba(255, 200, 80, 0.2);
+  color: #ffe9b0;
+}
+
+.dados__error {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  background: #fde8e8;
+  color: #8a1f1f;
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.dados__submit:disabled {
+  opacity: 0.7;
+  cursor: wait;
+  transform: none;
 }
 
 .dados__main {
@@ -71,7 +107,7 @@
 
 .dados__section h2 {
   margin: 0 0 1rem;
-  font-family: 'Libre Baskerville', Georgia, serif;
+  font-family: 'Poppins', system-ui, sans-serif;
   font-size: 1.35rem;
   font-weight: 700;
   color: #0a3d34;
@@ -139,6 +175,27 @@
   font-size: 0.9rem;
   font-weight: 500;
   line-height: 1.4;
+}
+
+.dados__radios {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.dados__radio {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: #2a4a42;
+  cursor: pointer;
+}
+
+.dados__radio input {
+  margin-top: 0.15rem;
+  accent-color: #0a7a5f;
 }
 
 .dados__tipo {
