@@ -47,6 +47,6 @@ export async function downloadPdfFromElement(
 }
 
 export function validacaoUrlFor(protocolo: string): string {
-  const base = (import.meta.env.VITE_VALIDACAO_URL || 'https://amasaude.org').replace(/\/$/, '')
+  const base = (import.meta.env.VITE_VALIDACAO_URL || 'https://validacao-amasaude.netlify.app').replace(/\/$/, '')
   return `${base}/atestado/${encodeURIComponent(protocolo)}`
 }
