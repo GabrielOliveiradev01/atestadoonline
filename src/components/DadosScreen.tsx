@@ -2,6 +2,8 @@ import type { FormEvent } from 'react'
 import type { AtestadoData, TipoRecomendacao } from '../types'
 import { UFS } from '../types'
 import { onlyDigits } from '../utils/format'
+import { CID_EXEMPLOS } from '../data/cidExemplos'
+import { MEDICOS_EXEMPLOS, formatCrmDisplay } from '../data/medicosExemplos'
 import './DadosScreen.css'
 
 type Props = {
@@ -225,13 +227,40 @@ export function DadosScreen({
 
           <section className="dados__section">
             <h2>Diagnóstico</h2>
+            <div className="dados__cid-exemplos">
+              <p className="dados__cid-label">CIDs de exemplo — toque para preencher</p>
+              <div className="dados__cid-list" role="list">
+                {CID_EXEMPLOS.map((item) => {
+                  const ativo = data.cid === item.cid
+                  return (
+                    <button
+                      key={item.cid}
+                      type="button"
+                      role="listitem"
+                      className={ativo ? 'dados__cid-item is-active' : 'dados__cid-item'}
+                      onClick={() =>
+                        onChange({
+                          ...data,
+                          cid: item.cid,
+                          diagnostico: item.condicao,
+                          autorizaCid: true,
+                        })
+                      }
+                    >
+                      <strong>{item.cid}</strong>
+                      <span>{item.condicao}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
             <div className="dados__grid">
               <label className="dados__field">
                 <span>C.I.D.</span>
                 <input
                   value={data.cid}
                   onChange={(e) => set('cid', e.target.value.toUpperCase().replace(/[^A-Z0-9.]/g, ''))}
-                  placeholder="Ex.: M545"
+                  placeholder="Ex.: M54.5"
                 />
               </label>
               <label className="dados__field">
@@ -271,6 +300,38 @@ export function DadosScreen({
                 Radiologista
               </button>
             </div>
+            {data.tipoProfissional === 'medico' && (
+              <div className="dados__cid-exemplos">
+                <p className="dados__cid-label">Médicos — toque para preencher</p>
+                <div className="dados__cid-list dados__medico-list" role="list">
+                  {MEDICOS_EXEMPLOS.map((m) => {
+                    const ativo =
+                      data.profissionalNome === m.nome.toUpperCase() &&
+                      data.conselhoNumero === m.crm
+                    return (
+                      <button
+                        key={`${m.crm}-${m.uf}`}
+                        type="button"
+                        role="listitem"
+                        className={ativo ? 'dados__cid-item is-active' : 'dados__cid-item'}
+                        onClick={() =>
+                          onChange({
+                            ...data,
+                            tipoProfissional: 'medico',
+                            profissionalNome: m.nome.toUpperCase(),
+                            conselhoNumero: m.crm,
+                            conselhoUf: m.uf,
+                          })
+                        }
+                      >
+                        <strong>{m.nome}</strong>
+                        <span>{formatCrmDisplay(m.crm, m.uf)}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
             <div className="dados__grid">
               <label className="dados__field dados__field--full">
                 <span>Nome do profissional</span>

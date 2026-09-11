@@ -115,6 +115,73 @@
   padding-bottom: 0.5rem;
 }
 
+.dados__cid-exemplos {
+  margin-bottom: 1.15rem;
+}
+
+.dados__cid-label {
+  margin: 0 0 0.65rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #2a4a42;
+}
+
+.dados__cid-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.dados__cid-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+  text-align: left;
+  font: inherit;
+  padding: 0.65rem 0.75rem;
+  border: 1.5px solid #b8d0c8;
+  border-radius: 4px;
+  background: #fff;
+  color: #12332c;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, transform 0.15s;
+}
+
+.dados__cid-item strong {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #0a5c4a;
+  letter-spacing: 0.02em;
+}
+
+.dados__cid-item span {
+  font-size: 0.78rem;
+  font-weight: 500;
+  line-height: 1.3;
+  color: #3d5e54;
+}
+
+.dados__cid-item:hover {
+  border-color: #0a7a5f;
+  transform: translateY(-1px);
+}
+
+.dados__cid-item.is-active {
+  border-color: #0a5c4a;
+  background: #e8f5f0;
+}
+
+.dados__cid-item.is-active strong {
+  color: #0a3d34;
+}
+
+.dados__medico-list {
+  max-height: 22rem;
+  overflow-y: auto;
+  padding-right: 0.15rem;
+}
+
 .dados__grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -271,7 +338,9 @@
     padding: 2.5rem 1.15rem 2.25rem;
   }
 
-  .dados__grid {
+  .dados__grid,
+  .dados__cid-list,
+  .dados__medico-list {
     grid-template-columns: 1fr;
   }
 
