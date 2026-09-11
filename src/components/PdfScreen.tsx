@@ -8,11 +8,10 @@ import './PdfScreen.css'
 type Props = {
   data: AtestadoData
   protocolo: string
-  dbWarning?: string | null
   onVoltar: () => void
 }
 
-export function PdfScreen({ data, protocolo, dbWarning = null, onVoltar }: Props) {
+export function PdfScreen({ data, protocolo, onVoltar }: Props) {
   const sheetRef = useRef<HTMLElement>(null)
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const pdfUrlRef = useRef<string | null>(null)
@@ -110,8 +109,6 @@ export function PdfScreen({ data, protocolo, dbWarning = null, onVoltar }: Props
           </button>
         </div>
       </header>
-
-      {dbWarning && <p className="pdf__warn no-print">{dbWarning}</p>}
 
       <div className="pdf__viewer-wrap no-print">
         {loading && <p className="pdf__status">Gerando visualização do PDF…</p>}

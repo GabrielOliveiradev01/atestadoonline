@@ -12,7 +12,6 @@ type Props = {
   onGerar: () => void
   saving?: boolean
   saveError?: string | null
-  dbReady?: boolean
 }
 
 const RECOMENDACOES: { value: TipoRecomendacao; label: string }[] = [
@@ -29,7 +28,6 @@ export function DadosScreen({
   onGerar,
   saving = false,
   saveError = null,
-  dbReady = false,
 }: Props) {
   const set = <K extends keyof AtestadoData>(key: K, value: AtestadoData[K]) => {
     onChange({ ...data, [key]: value })
@@ -50,11 +48,6 @@ export function DadosScreen({
           <p className="dados__lead">
             Preencha os dados para emitir o atestado no modelo oficial da
             Secretaria Municipal da Saúde.
-          </p>
-          <p className={`dados__db ${dbReady ? 'is-ok' : 'is-warn'}`}>
-            {dbReady
-              ? 'Banco de dados conectado (Supabase)'
-              : 'Banco offline — configure VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY no .env'}
           </p>
         </div>
       </header>
@@ -388,7 +381,7 @@ export function DadosScreen({
 
           <div className="dados__actions">
             <button type="submit" className="dados__submit" disabled={saving}>
-              {saving ? 'Salvando no banco…' : 'Visualizar PDF'}
+              {saving ? 'Gerando…' : 'Gerar PDF'}
             </button>
           </div>
         </form>
