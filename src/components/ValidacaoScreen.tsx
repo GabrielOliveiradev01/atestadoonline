@@ -1,8 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import QRCode from 'qrcode'
 import { buscarPorProtocolo } from '../services/atestados'
 import type { AtestadoRow } from '../lib/database.types'
+import { AtestadoSheet } from './AtestadoSheet'
+import { rowToAtestadoData } from '../utils/atestadoMap'
+import { downloadPdfFromElement, validacaoUrlFor } from '../utils/gerarPdf'
 import './ValidacaoScreen.css'
+import './PdfScreen.css'
 
 const TIPO: Record<string, string> = {
   sem_afastamento: 'Atendimento sem afastamento',
@@ -21,9 +26,12 @@ function mascararDoc(doc: string): string {
 export function ValidacaoScreen() {
   const { protocolo = '' } = useParams()
   const decoded = decodeURIComponent(protocolo)
+  const sheetRef = useRef<HTMLElement>(null)
   const [loading, setLoading] = useState(true)
   const [erro, setErro] = useState<string | null>(null)
   const [atestado, setAtestado] = useState<AtestadoRow | null>(null)
+  const [qrUrl, setQrUrl] = useState('')
+  const [baixando, setBaixando] = useState(false)
 
   useEffect(() => {
     let alive = true
@@ -43,6 +51,29 @@ export function ValidacaoScreen() {
       alive = false
     }
   }, [decoded])
+
+  useEffect(() => {
+    if (!atestado) return
+    QRCode.toDataURL(validacaoUrlFor(atestado.protocolo), {
+      margin: 1,
+      width: 160,
+      errorCorrectionLevel: 'M',
+    }).then(setQrUrl)
+  }, [atestado])
+
+  const baixarPdf = async () => {
+    if (!sheetRef.current || !atestado) return
+    setBaixando(true)
+    try {
+      await downloadPdfFromElement(
+        sheetRef.current,
+        `atestado-${atestado.protocolo}.pdf`,
+        qrUrl,
+      )
+    } finally {
+      setBaixando(false)
+    }
+  }
 
   return (
     <div className="validacao">
@@ -117,12 +148,31 @@ export function ValidacaoScreen() {
           <p className="validacao__when">
             Consultado em {new Date().toLocaleString('pt-BR')}
           </p>
+
+          <button
+            type="button"
+            className="validacao__download"
+            onClick={baixarPdf}
+            disabled={baixando || !qrUrl}
+          >
+            {baixando ? 'Gerando PDF…' : 'Baixar PDF do atestado'}
+          </button>
         </div>
       )}
 
       <p className="validacao__back">
         <Link to="/">← Voltar</Link>
       </p>
+
+      {atestado && (
+        <div className="pdf__offscreen" aria-hidden="true">
+          <AtestadoSheet
+            ref={sheetRef}
+            data={rowToAtestadoData(atestado)}
+            qrUrl={qrUrl}
+          />
+        </div>
+      )}
     </div>
   )
 }

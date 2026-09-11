@@ -90,6 +90,28 @@
   font-weight: 500;
 }
 
+.validacao__download {
+  margin-top: 1.25rem;
+  width: 100%;
+  font: inherit;
+  font-weight: 700;
+  padding: 0.9rem 1rem;
+  border: none;
+  border-radius: 4px;
+  background: linear-gradient(135deg, #0a5c4a, #0c6b7a);
+  color: #fff;
+  cursor: pointer;
+}
+
+.validacao__download:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.validacao__download:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+
 .validacao__back {
   margin-top: 1.25rem;
   text-align: center;
